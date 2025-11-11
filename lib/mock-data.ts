@@ -1,12 +1,20 @@
 
-import { User } from './auth';
-import { PedidoResponse } from './pedidos';
-import { Product } from './products';
-import { TrackingPoint } from './tracking';
+import { User, PedidoResponse, Product, TrackingPoint } from './types';
+
+const U = {
+  user1: '00000000-0000-0000-0000-000000000001',
+  user2: '00000000-0000-0000-0000-000000000002',
+  perfil1: '10000000-0000-0000-0000-000000000001',
+  transportista1: '20000000-0000-0000-0000-000000000001',
+  dir1: '30000000-0000-0000-0000-000000000001',
+  dir2: '30000000-0000-0000-0000-000000000002',
+  pedido1: '40000000-0000-0000-0000-000000000001',
+  pedido2: '40000000-0000-0000-0000-000000000002',
+};
 
 export const mockUsers: User[] = [
-  { id_usuario: 1, email: 'cliente@example.com', nombre: 'Juan', apellido: 'Perez', rol: 'cliente', estado: 'activo' },
-  { id_usuario: 2, email: 'transportista@example.com', nombre: 'Maria', apellido: 'Gomez', rol: 'transportista', estado: 'activo' },
+  { id: U.user1, email: 'cliente@example.com', nombre: 'Juan', apellido: 'Perez', rol: 'cliente' },
+  { id: U.user2, email: 'transportista@example.com', nombre: 'Maria', apellido: 'Gomez', rol: 'transportista' },
 ];
 
 export const mockProducts: Product[] = [
@@ -17,28 +25,26 @@ export const mockProducts: Product[] = [
 
 export const mockPedidos: PedidoResponse[] = [
   {
-    id_pedido: 1,
-    numero_tracking: 'TRACK123',
-    id_cliente: 1,
-    fecha_solicitud: new Date().toISOString(),
+    id_pedido: U.pedido1,
+    numero_tracking: 'TRK-1234ABCD',
+    id_perfil: U.perfil1,
+    id_transportista: U.transportista1,
+    id_direccion_origen: U.dir1,
+    id_direccion_destino: U.dir2,
     estado: 'en_ruta',
-    prioridad: 'alta',
     monto_total: 1500,
-    direccion_origen: 1,
-    direccion_destino: 2,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
-    id_pedido: 2,
-    numero_tracking: 'TRACK456',
-    id_cliente: 1,
-    fecha_solicitud: new Date().toISOString(),
+    id_pedido: U.pedido2,
+    numero_tracking: 'TRK-4567EFGH',
+    id_perfil: U.perfil1,
+    id_transportista: U.transportista1,
+    id_direccion_origen: U.dir1,
+    id_direccion_destino: U.dir2,
     estado: 'entregado',
-    prioridad: 'normal',
     monto_total: 800,
-    direccion_origen: 1,
-    direccion_destino: 2,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
@@ -47,7 +53,7 @@ export const mockPedidos: PedidoResponse[] = [
 export const mockTrackingPoints: TrackingPoint[] = [
   {
     id_tracking: 1,
-    id_pedido: 1,
+    id_pedido: U.pedido1,
     fecha_hora: new Date().toISOString(),
     latitud: -19.0459,
     longitud: -65.2561,
@@ -57,7 +63,7 @@ export const mockTrackingPoints: TrackingPoint[] = [
   },
   {
     id_tracking: 2,
-    id_pedido: 1,
+    id_pedido: U.pedido1,
     fecha_hora: new Date(Date.now() - 3600 * 1000).toISOString(),
     latitud: -19.0459,
     longitud: -65.2561,

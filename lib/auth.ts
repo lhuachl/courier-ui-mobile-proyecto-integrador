@@ -1,17 +1,11 @@
 import { Alert } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import { mockUsers } from './mock-data';
+import type { User } from './types';
 
 const AUTH_TOKEN_KEY = 'auth_token';
 
-export interface User {
-  id_usuario: number;
-  email: string;
-  nombre: string;
-  apellido: string;
-  rol: string;
-  estado: string;
-}
+// User type ahora se importa desde './types' (UUID)
 
 export interface AuthState {
   user: User | null;
@@ -49,7 +43,7 @@ export async function loadSession() {
   try {
     const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
     if (token) {
-      const user = mockUsers.find(u => u.email === token);
+      const user = mockUsers.find(u => u.email === token || u.id === token);
       if (user) {
         authState.token = token;
         authState.isAuthenticated = true;
@@ -71,8 +65,9 @@ export async function login(email: string, password: string): Promise<{ success:
   const user = mockUsers.find(u => u.email === email);
 
   if (user) {
-    await SecureStore.setItemAsync(AUTH_TOKEN_KEY, user.email);
-    authState.token = user.email;
+    const token = user.email ?? user.id;
+    await SecureStore.setItemAsync(AUTH_TOKEN_KEY, token);
+    authState.token = token;
     authState.isAuthenticated = true;
     authState.user = user;
     authState.isLoading = false;
@@ -97,17 +92,17 @@ export async function register(email: string, password: string, nombre: string, 
   }
 
   const newUser: User = {
-    id_usuario: Math.max(...mockUsers.map(u => u.id_usuario)) + 1,
+    id: generateUUID(),
     email,
     nombre,
     apellido,
-    rol,
-    estado: 'activo',
+    rol: rol as any,
   };
   mockUsers.push(newUser);
 
-  await SecureStore.setItemAsync(AUTH_TOKEN_KEY, newUser.email);
-  authState.token = newUser.email;
+  const token = newUser.email ?? newUser.id;
+  await SecureStore.setItemAsync(AUTH_TOKEN_KEY, token);
+  authState.token = token;
   authState.isAuthenticated = true;
   authState.user = newUser;
   authState.isLoading = false;
@@ -149,14 +144,24 @@ export function isTransportista(): boolean {
   return authState.user?.rol === 'transportista';
 }
 
-export async function getClienteId(): Promise<number | null> {
+export async function getClienteId(): Promise<string | null> {
   if (!isCliente() || !authState.user) return null;
-  // Assuming id_usuario in User is the foreign key in clientes table
-  return authState.user.id_usuario;
+  return authState.user.id;
 }
 
-export async function getTransportistaId(): Promise<number | null> {
+export async function getTransportistaId(): Promise<string | null> {
   if (!isTransportista() || !authState.user) return null;
-  // Assuming id_usuario in User is the foreign key in transportistas table
-  return authState.user.id_usuario;
+  return authState.user.id;
+}
+
+function generateUUID(): string {
+  const g: any = globalThis as any;
+  if (typeof g.crypto?.randomUUID === 'function') {
+    return g.crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0,
+      v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
 }

@@ -23,7 +23,7 @@ export default function PedidoDetailScreen() {
         // attempt to load tracking points (best-effort)
         try {
           setLoadingTracking(true);
-          const tr = await apiGetTrackingForPedido(Number(id));
+          const tr = await apiGetTrackingForPedido(String(id));
           setTracking(tr as TrackingPoint[]);
         } catch (e) {
           // ignore - tracking endpoint may require auth in dev
@@ -59,8 +59,7 @@ export default function PedidoDetailScreen() {
     <ThemedView style={styles.container}>
       <ThemedText type="title">{pedido.numero_tracking}</ThemedText>
       <ThemedText>Estado: {pedido.estado}</ThemedText>
-      {pedido.prioridad ? <ThemedText>Prioridad: {pedido.prioridad}</ThemedText> : null}
-      {pedido.peso != null ? <ThemedText>Peso: {pedido.peso} kg</ThemedText> : null}
+      {/* Campos de prioridad y peso no están presentes en el nuevo esquema */}
       {pedido.monto_total != null ? <ThemedText>Monto: ${pedido.monto_total}</ThemedText> : null}
       {pedido.fecha_entrega_estimada ? (
         <ThemedText>Entrega estimada: {new Date(pedido.fecha_entrega_estimada).toLocaleString()}</ThemedText>
@@ -69,7 +68,7 @@ export default function PedidoDetailScreen() {
         <Button title={loadingTracking ? 'Cargando tracking...' : 'Actualizar tracking'} onPress={async () => {
           try {
             setLoadingTracking(true);
-            const tr = await apiGetTrackingForPedido(Number(id));
+            const tr = await apiGetTrackingForPedido(String(id));
             setTracking(tr as TrackingPoint[]);
           } catch (e:any) {
             Alert.alert('Error', e?.message ?? 'No se pudo cargar tracking');

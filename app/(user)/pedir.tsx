@@ -5,6 +5,9 @@ import { ThemedView } from '@/components/themed-view';
 import ProductCard from '@/components/ui/ProductCard';
 import CartSummary from '@/components/ui/CartSummary';
 import { Platform } from 'react-native';
+import { createPedido } from '@/lib/pedidos';
+import { getClienteId } from '@/lib/auth';
+import type { PedidoCreate } from '@/lib/types';
 
 // Read the runtime global that `detectBackend` sets at app start.
 const getApiBase = () => (global as any).REACT_NATIVE_API_BASE_URL || (Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000');
@@ -75,7 +78,19 @@ export default function PedirScreen() {
     });
   }
 
-  async function createPedido() {
+  function genUUID() {
+    const g: any = globalThis as any;
+    if (typeof g.crypto?.randomUUID === 'function') {
+      return g.crypto.randomUUID();
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      const r = (Math.random() * 16) | 0,
+        v = c === 'x' ? r : (r & 0x3) | 0x8;
+      return v.toString(16);
+    });
+  }
+
+  async function createPedidoAction() {
     const items = Object.entries(cart).map(([productId, qty]) => ({ product_id: Number(productId), quantity: qty }));
     if (items.length === 0) return Alert.alert('Carrito vacío', 'Seleccione productos antes de crear el pedido');
 
@@ -84,33 +99,23 @@ export default function PedirScreen() {
       return acc + (p ? p.precio * it.quantity : 0);
     }, 0);
 
-    const payload = {
-      numero_tracking: `TRK-${Date.now()}`,
-      id_cliente: null,
+    const perfilId = (await getClienteId()) || genUUID();
+    const payload: PedidoCreate = {
+      id_perfil: perfilId,
+      id_direccion_origen: genUUID(),
+      id_direccion_destino: genUUID(),
+      estado: 'pendiente',
       fecha_entrega_estimada: new Date().toISOString(),
-      direccion_origen: null,
-      direccion_destino: null,
-      prioridad: 'normal',
-      peso: 1.0,
       monto_total,
-      items,
+      // id_transportista: opcional; se asigna luego por operador
+      Ubicacion: undefined,
     };
 
     if (submitting) return; // prevent duplicates
     setSubmitting(true);
     try {
-      const res = await fetch(`${getApiBase()}/pedidos/test-create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const text = await res.text().catch(() => '');
-        throw new Error(`HTTP ${res.status} ${text}`);
-      }
-      const data = await res.json();
-      const createdId = data.id_pedido ?? data.id ?? data.idPedido ?? null;
-      Alert.alert('Pedido creado', `ID: ${String(createdId)}`);
+      const created = await createPedido(payload);
+      Alert.alert('Pedido creado', `ID: ${String(created.id_pedido)}`);
       setCart({});
     } catch (e) {
       console.warn('Error creating pedido', e);
@@ -163,7 +168,7 @@ export default function PedirScreen() {
       <CartSummary
         items={Object.entries(cart).map(([product_id, quantity]) => ({ product_id: Number(product_id), quantity }))}
         productsMap={products.reduce((acc, p) => ({ ...acc, [String(p.id)]: { precio: p.precio, nombre: p.nombre } }), {} as Record<string, { precio: number; nombre?: string }>)}
-        onCheckout={createPedido}
+        onCheckout={createPedidoAction}
         onClear={() => setCart({})}
         loading={submitting}
       />

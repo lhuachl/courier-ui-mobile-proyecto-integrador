@@ -44,18 +44,17 @@ export default function AsignadosScreen() {
     }
   };
 
-  const handlePedidoPress = (id_pedido: number) => {
+  const handlePedidoPress = (id_pedido: string) => {
     router.push({ pathname: '/(driver)/gps', params: { id_pedido } });
   };
 
   const renderPedido = ({ item }: { item: PedidoResponse }) => (
     <Pressable onPress={() => handlePedidoPress(item.id_pedido)} style={styles.pedidoCard}>
-      <ThemedText type="defaultSemiBold">Pedido #{item.id_pedido}</ThemedText>
+      <ThemedText type="defaultSemiBold">Pedido</ThemedText>
       <ThemedText>Tracking: {item.numero_tracking}</ThemedText>
       <ThemedText>Estado: {item.estado}</ThemedText>
-      <ThemedText>Prioridad: {item.prioridad}</ThemedText>
       <ThemedText>Monto: ${item.monto_total}</ThemedText>
-      <ThemedText>Fecha: {new Date(item.fecha_solicitud).toLocaleDateString()}</ThemedText>
+      <ThemedText>Fecha: {item.created_at ? new Date(item.created_at).toLocaleDateString() : '-'}</ThemedText>
     </Pressable>
   );
 
@@ -84,7 +83,7 @@ export default function AsignadosScreen() {
       ) : (
         <FlatList
           data={pedidos}
-          keyExtractor={(item) => item.id_pedido.toString()}
+          keyExtractor={(item) => item.id_pedido}
           renderItem={renderPedido}
           contentContainerStyle={{ paddingBottom: 20 }}
         />

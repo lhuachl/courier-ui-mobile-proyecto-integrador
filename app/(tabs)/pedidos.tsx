@@ -46,7 +46,7 @@ export default function PedidosScreen() {
     <ThemedView style={styles.container}>
       <FlatList
         data={items}
-        keyExtractor={(it) => it.id_pedido.toString()}
+        keyExtractor={(it) => it.id_pedido}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
         renderItem={({ item }) => (
           <Pressable
@@ -61,7 +61,7 @@ export default function PedidosScreen() {
             </View>
             <View style={styles.cardBody}>
               <ThemedText style={styles.date}>
-                {new Date(item.fecha_solicitud).toLocaleDateString()}
+                {item.created_at ? new Date(item.created_at).toLocaleDateString() : '-'}
               </ThemedText>
               <ThemedText style={styles.total}>${item.monto_total.toFixed(2)}</ThemedText>
             </View>
@@ -111,7 +111,10 @@ const styles = StyleSheet.create({
   pendiente: {
     backgroundColor: '#ffc107', // amber
   },
-  en_camino: {
+  procesando: {
+    backgroundColor: '#6c757d', // secondary/processing
+  },
+  en_ruta: {
     backgroundColor: '#17a2b8', // info
   },
   entregado: {

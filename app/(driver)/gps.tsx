@@ -48,7 +48,7 @@ export default function GPSScreen() {
       const transportistaId = await getTransportistaId();
       if (transportistaId && id_pedido) {
         createTrackingPoint({
-          id_pedido: Number(id_pedido),
+          id_pedido: String(id_pedido),
           id_transportista: transportistaId,
           latitud: currentLocation.coords.latitude,
           longitud: currentLocation.coords.longitude,
