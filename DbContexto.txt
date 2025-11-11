@@ -1,0 +1,202 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.calificaciones (
+  id_calificacion integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  id_pedido integer,
+  puntuacion integer,
+  comentario text,
+  created_at timestamp without time zone,
+  CONSTRAINT calificaciones_pkey PRIMARY KEY (id_calificacion),
+  CONSTRAINT calificaciones_id_pedido_fkey FOREIGN KEY (id_pedido) REFERENCES public.pedidos(id_pedido)
+);
+CREATE TABLE public.clientes (
+  id_cliente integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  id_usuario integer,
+  tipo character varying,
+  documento_identidad character varying UNIQUE,
+  telefono character varying,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT clientes_pkey PRIMARY KEY (id_cliente),
+  CONSTRAINT clientes_id_usuario_fkey FOREIGN KEY (id_usuario) REFERENCES public.usuarios(id_usuario)
+);
+CREATE TABLE public.detallerutas (
+  id_detalle integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  id_ruta integer,
+  id_pedido integer,
+  orden_visita integer,
+  estado character varying,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT detallerutas_pkey PRIMARY KEY (id_detalle),
+  CONSTRAINT detallerutas_id_ruta_fkey FOREIGN KEY (id_ruta) REFERENCES public.rutas(id_ruta),
+  CONSTRAINT detallerutas_id_pedido_fkey FOREIGN KEY (id_pedido) REFERENCES public.pedidos(id_pedido)
+);
+CREATE TABLE public.direcciones (
+  id_direccion integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  id_cliente integer,
+  calle character varying,
+  numero character varying,
+  ciudad character varying,
+  codigo_postal character varying,
+  latitud numeric,
+  longitud numeric,
+  tipo character varying,
+  id_zona integer,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT direcciones_pkey PRIMARY KEY (id_direccion),
+  CONSTRAINT direcciones_id_cliente_fkey FOREIGN KEY (id_cliente) REFERENCES public.clientes(id_cliente),
+  CONSTRAINT direcciones_id_zona_fkey FOREIGN KEY (id_zona) REFERENCES public.zonas(id_zona)
+);
+CREATE TABLE public.facturas (
+  id_factura integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  numero_factura character varying UNIQUE,
+  id_cliente integer,
+  id_pedido integer,
+  fecha_emision timestamp without time zone,
+  subtotal numeric,
+  impuestos numeric,
+  total numeric,
+  estado character varying,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT facturas_pkey PRIMARY KEY (id_factura),
+  CONSTRAINT facturas_id_cliente_fkey FOREIGN KEY (id_cliente) REFERENCES public.clientes(id_cliente),
+  CONSTRAINT facturas_id_pedido_fkey FOREIGN KEY (id_pedido) REFERENCES public.pedidos(id_pedido)
+);
+CREATE TABLE public.notificaciones (
+  id_notificacion integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  id_usuario integer,
+  id_pedido integer,
+  titulo character varying,
+  contenido text,
+  leido boolean,
+  fecha_envio timestamp without time zone,
+  created_at timestamp without time zone,
+  CONSTRAINT notificaciones_pkey PRIMARY KEY (id_notificacion),
+  CONSTRAINT notificaciones_id_usuario_fkey FOREIGN KEY (id_usuario) REFERENCES public.usuarios(id_usuario),
+  CONSTRAINT notificaciones_id_pedido_fkey FOREIGN KEY (id_pedido) REFERENCES public.pedidos(id_pedido)
+);
+CREATE TABLE public.pagos (
+  id_pago integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  id_pedido integer,
+  monto numeric,
+  metodo_pago character varying,
+  estado character varying,
+  referencia_externa character varying,
+  fecha_pago timestamp without time zone,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT pagos_pkey PRIMARY KEY (id_pago),
+  CONSTRAINT pagos_id_pedido_fkey FOREIGN KEY (id_pedido) REFERENCES public.pedidos(id_pedido)
+);
+CREATE TABLE public.pedidos (
+  id_pedido integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  numero_tracking character varying UNIQUE,
+  id_cliente integer,
+  fecha_solicitud timestamp without time zone,
+  fecha_entrega_estimada timestamp without time zone,
+  fecha_entrega_real timestamp without time zone,
+  direccion_origen integer,
+  direccion_destino integer,
+  estado character varying,
+  prioridad character varying,
+  peso numeric,
+  dimensiones character varying,
+  monto_total numeric,
+  id_transportista integer,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  ubicacion character varying,
+  CONSTRAINT pedidos_pkey PRIMARY KEY (id_pedido),
+  CONSTRAINT pedidos_id_cliente_fkey FOREIGN KEY (id_cliente) REFERENCES public.clientes(id_cliente),
+  CONSTRAINT pedidos_direccion_origen_fkey FOREIGN KEY (direccion_origen) REFERENCES public.direcciones(id_direccion),
+  CONSTRAINT pedidos_direccion_destino_fkey FOREIGN KEY (direccion_destino) REFERENCES public.direcciones(id_direccion),
+  CONSTRAINT pedidos_id_transportista_fkey FOREIGN KEY (id_transportista) REFERENCES public.transportistas(id_transportista)
+);
+CREATE TABLE public.producto (
+  id_producto integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  nombre character varying NOT NULL,
+  descripcion text,
+  cantidad integer NOT NULL,
+  precio_unitario numeric NOT NULL,
+  peso numeric,
+  dimensiones character varying,
+  categoria character varying,
+  id_pedido integer,
+  created_at timestamp without time zone DEFAULT now(),
+  updated_at timestamp without time zone DEFAULT now(),
+  CONSTRAINT producto_pkey PRIMARY KEY (id_producto),
+  CONSTRAINT fk_pedido FOREIGN KEY (id_pedido) REFERENCES public.pedidos(id_pedido)
+);
+CREATE TABLE public.rutas (
+  id_ruta integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  id_zona integer,
+  id_transportista integer,
+  fecha date,
+  estado character varying,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT rutas_pkey PRIMARY KEY (id_ruta),
+  CONSTRAINT rutas_id_zona_fkey FOREIGN KEY (id_zona) REFERENCES public.zonas(id_zona),
+  CONSTRAINT rutas_id_transportista_fkey FOREIGN KEY (id_transportista) REFERENCES public.transportistas(id_transportista)
+);
+CREATE TABLE public.spatial_ref_sys (
+  srid integer NOT NULL CHECK (srid > 0 AND srid <= 998999),
+  auth_name character varying,
+  auth_srid integer,
+  srtext character varying,
+  proj4text character varying,
+  CONSTRAINT spatial_ref_sys_pkey PRIMARY KEY (srid)
+);
+CREATE TABLE public.tracking (
+  id_tracking integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  id_pedido integer,
+  id_transportista integer,
+  fecha_hora timestamp without time zone,
+  latitud numeric,
+  longitud numeric,
+  estado character varying,
+  comentario text,
+  created_at timestamp without time zone,
+  CONSTRAINT tracking_pkey PRIMARY KEY (id_tracking),
+  CONSTRAINT tracking_id_pedido_fkey FOREIGN KEY (id_pedido) REFERENCES public.pedidos(id_pedido),
+  CONSTRAINT tracking_id_transportista_fkey FOREIGN KEY (id_transportista) REFERENCES public.transportistas(id_transportista)
+);
+CREATE TABLE public.transportistas (
+  id_transportista integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  id_usuario integer,
+  tipo_vehiculo character varying,
+  placa_vehiculo character varying,
+  capacidad_carga numeric,
+  estado character varying,
+  zona_asignada integer,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT transportistas_pkey PRIMARY KEY (id_transportista),
+  CONSTRAINT transportistas_id_usuario_fkey FOREIGN KEY (id_usuario) REFERENCES public.usuarios(id_usuario),
+  CONSTRAINT transportistas_zona_asignada_fkey FOREIGN KEY (zona_asignada) REFERENCES public.zonas(id_zona)
+);
+CREATE TABLE public.usuarios (
+  id_usuario integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  email character varying UNIQUE,
+  password_hash character varying,
+  nombre character varying,
+  apellido character varying,
+  rol character varying,
+  estado character varying,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT usuarios_pkey PRIMARY KEY (id_usuario)
+);
+CREATE TABLE public.zonas (
+  id_zona integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  nombre character varying,
+  ciudad character varying,
+  poligono_geo character varying,
+  created_at timestamp without time zone,
+  updated_at timestamp without time zone,
+  CONSTRAINT zonas_pkey PRIMARY KEY (id_zona)
+);
